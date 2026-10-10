@@ -1,0 +1,211 @@
+# config/businesses/example-workers-comp.yaml
+#
+# Public template for a workers' compensation law firm using the
+# RingCentral + Twilio + LiveKit path described in
+# `documentation/ringcentral-setup.md`. Copy to a tenant-specific local
+# YAML (e.g. `config/businesses/<slug>.yaml`) for deployment; any business
+# YAML other than `example-*.yaml` is gitignored by design.
+#
+# Replace every +1555... routing placeholder with a real claims-rep DID
+# before connecting live calls. The 15 entries below are obvious dummies
+# so an unfinished template can never accidentally dial a real number.
+
+business:
+  name: "Example Workers' Comp Law"
+  type: "workers' compensation law firm"
+  timezone: "America/New_York"
+
+voice:
+  voice_id: "marin"
+  model: "gpt-realtime-2.1"
+  # Recommended production safety nets for long intake calls:
+  # idle:
+  #   absolute_silence_seconds: 120
+  #   max_call_duration_seconds: 900
+
+languages:
+  primary: "en"
+  allowed: ["en", "es"]
+
+greeting: "Thank you for calling Example Workers' Comp Law, this is Alex. How can I help you today?"
+
+personality: |
+  Your name is Alex. You are the firm's phone receptionist.
+  Be calm, professional, and concise. Do not provide legal advice, evaluate
+  claim value, promise outcomes, or create an attorney-client relationship.
+  If a caller needs legal guidance, transfer them to the appropriate claims
+  representative or take a detailed message for intake.
+
+  Do not include AI-disclosure language in the greeting or routine answers.
+  If a caller asks what you can do, explain that you can route calls, answer
+  basic firm questions, and take messages for the team.
+
+  For new potential clients, collect: caller name, callback number, employer,
+  date of accident, injury/body part, whether they have an existing claim
+  number, and whether they have received any Workers' Compensation Board or
+  insurance-carrier notices. If they do not want to provide details, take a
+  shorter message and route it to intake.
+
+hours:
+  monday:    { open: "09:00", close: "17:00" }
+  tuesday:   { open: "09:00", close: "17:00" }
+  wednesday: { open: "09:00", close: "17:00" }
+  thursday:  { open: "09:00", close: "17:00" }
+  friday:    { open: "09:00", close: "17:00" }
+  saturday:  closed
+  sunday:    closed
+
+after_hours_message: |
+  The office is currently closed. I can take a message for intake, and someone
+  from the firm will follow up during business hours.
+
+routing:
+  - name: "Claims Rep 01"
+    number: "+15550100001"
+    description: "Placeholder transfer target for claims representative 01"
+  - name: "Claims Rep 02"
+    number: "+15550100002"
+    description: "Placeholder transfer target for claims representative 02"
+  - name: "Claims Rep 03"
+    number: "+15550100003"
+    description: "Placeholder transfer target for claims representative 03"
+  - name: "Claims Rep 04"
+    number: "+15550100004"
+    description: "Placeholder transfer target for claims representative 04"
+  - name: "Claims Rep 05"
+    number: "+15550100005"
+    description: "Placeholder transfer target for claims representative 05"
+  - name: "Claims Rep 06"
+    number: "+15550100006"
+    description: "Placeholder transfer target for claims representative 06"
+  - name: "Claims Rep 07"
+    number: "+15550100007"
+    description: "Placeholder transfer target for claims representative 07"
+  - name: "Claims Rep 08"
+    number: "+15550100008"
+    description: "Placeholder transfer target for claims representative 08"
+  - name: "Claims Rep 09"
+    number: "+15550100009"
+    description: "Placeholder transfer target for claims representative 09"
+  - name: "Claims Rep 10"
+    number: "+15550100010"
+    description: "Placeholder transfer target for claims representative 10"
+  - name: "Claims Rep 11"
+    number: "+15550100011"
+    description: "Placeholder transfer target for claims representative 11"
+  - name: "Claims Rep 12"
+    number: "+15550100012"
+    description: "Placeholder transfer target for claims representative 12"
+  - name: "Claims Rep 13"
+    number: "+15550100013"
+    description: "Placeholder transfer target for claims representative 13"
+  - name: "Claims Rep 14"
+    number: "+15550100014"
+    description: "Placeholder transfer target for claims representative 14"
+  - name: "Claims Rep 15"
+    number: "+15550100015"
+    description: "Placeholder transfer target for claims representative 15"
+
+faqs:
+  - question: "Do you handle workers' compensation claims?"
+    answer: "Yes, the firm handles workers' compensation matters. I can connect you with a claims representative or take an intake message."
+  - question: "Can you give legal advice over the phone?"
+    answer: "I can't provide legal advice. I can connect you with the right person at the firm or take a message so someone can follow up."
+  - question: "What information should I have ready?"
+    answer: "Helpful details include your callback number, employer, date of accident, injury, claim number if you have one, and any notices you received."
+  - question: "What if my call is urgent?"
+    answer: "If this is a medical emergency, please call 911. For an urgent legal or claim issue, I can try to transfer you to a claims representative or take a message for intake."
+
+messages:
+  channels:
+    - type: "file"
+      file_path: "./messages/example-workers-comp/"
+    - type: "email"
+      to: ["intake@example.com"]
+      include_transcript: true
+      include_recording_link: true
+
+recording:
+  enabled: true
+  storage:
+    type: "local"
+    local:
+      path: "./recordings/example-workers-comp/"
+  consent_preamble:
+    enabled: false
+    text: ""
+
+transcripts:
+  enabled: true
+  storage:
+    type: "local"
+    path: "./transcripts/example-workers-comp/"
+  formats: ["json", "markdown"]
+
+email:
+  from: "Alex <intake@example.com>"
+  sender:
+    type: "resend"
+    resend:
+      # Set this in .env before running this example, or replace with a
+      # tenant-specific env-var name in the copied local YAML.
+      api_key: ${EXAMPLE_RESEND_API_KEY}
+  triggers:
+    on_message: true
+    on_call_end: true
+    on_booking: false
+
+retention:
+  recordings_days: 90
+  transcripts_days: 90
+  messages_days: 0
+
+sip:
+  transfer_uri_template: "tel:{number}"
+
+# Structured new-client intake by phone. When enabled, Riley can walk a
+# caller through a configurable question script per case type and email
+# a structured submission at call-end. Uncomment to enable.
+#
+# Partial answers are persisted to `submission.file_path` after every
+# question so a mid-call disconnect still produces a usable record. The
+# completed intake is also emailed via whichever email channel(s) are
+# configured in `messages.channels`.
+#
+# To enable: remove the "# " from each line below — both the # and the space.
+# intakes:
+#   enabled: true
+#   preamble_en: |
+#     This intake is fairly thorough — it usually takes about 15 to 20
+#     minutes. Do you have time to go through it now, or should I take
+#     a short message and we can complete it later?
+#   preamble_es: |
+#     Esta entrevista es bastante completa — generalmente toma unos 15 a 20
+#     minutos. ¿Tiene tiempo ahora, o prefiere dejar un mensaje breve
+#     para completarla más tarde?
+#   submission:
+#     file_path: "./messages/example-workers-comp/intakes/"
+#   case_types:
+#     - key: example_intake
+#       display_name: "Example case type"
+#       display_name_es: "Tipo de caso de ejemplo"
+#       google_form_id: ""               # optional, used by the sync CLI only
+#       questions:
+#         - key: caller_full_name
+#           prompt_en: "Could you start with your full legal name, including spelling?"
+#           prompt_es: "¿Podría comenzar con su nombre legal completo, incluyendo cómo se deletrea?"
+#           required: true
+#           critical: true                # triggers per-field readback
+#           validation: text
+#         - key: callback_number
+#           prompt_en: "What's the best phone number to call you back?"
+#           prompt_es: "¿Cuál es el mejor número para devolverle la llamada?"
+#           required: true
+#           critical: true
+#           validation: phone
+#         - key: short_description
+#           prompt_en: "In one or two sentences, what is the matter about?"
+#           prompt_es: "En una o dos oraciones, ¿de qué se trata el asunto?"
+#           required: true
+#           critical: false
+#           validation: text

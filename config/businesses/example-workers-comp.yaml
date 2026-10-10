@@ -16,8 +16,10 @@ business:
   timezone: "America/New_York"
 
 voice:
-  voice_id: "marin"
-  model: "gpt-realtime-2.1"
+  voice_id: "autumn"
+  model: "openai/gpt-oss-120b"
+  stt_model: "whisper-large-v3-turbo"
+  tts_model: "canopylabs/orpheus-v1-english"
   # Recommended production safety nets for long intake calls:
   # idle:
   #   absolute_silence_seconds: 120

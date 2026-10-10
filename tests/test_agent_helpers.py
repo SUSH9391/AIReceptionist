@@ -938,3 +938,32 @@ def test_recovery_never_raises_when_session_methods_fail():
         await rec.handle_error(_err_event())  # must not raise
 
     _asyncio.run(run())
+
+
+def test_build_groq_pipeline():
+    from receptionist.agent import _build_groq_pipeline
+    voice = VoiceConfig(
+        voice_id="autumn",
+        model="llama-3.3-70b-versatile",
+        stt_model="whisper-large-v3-turbo",
+        tts_model="canopylabs/orpheus-v1-english",
+    )
+    stt, llm, tts = _build_groq_pipeline(voice, api_key="gsk-test")
+    assert stt._opts.model == "whisper-large-v3-turbo"
+    assert llm._opts.model == "llama-3.3-70b-versatile"
+    assert tts._opts.model == "canopylabs/orpheus-v1-english"
+    assert tts._opts.voice == "autumn"
+
+
+def test_build_groq_pipeline_normalizes_legacy_voice_and_model():
+    from receptionist.agent import _build_groq_pipeline
+    voice = VoiceConfig(
+        voice_id="marin",
+        model="gpt-realtime-2.1",
+    )
+    stt, llm, tts = _build_groq_pipeline(voice, api_key="gsk-test")
+    assert stt._opts.model == "whisper-large-v3-turbo"
+    assert llm._opts.model == "openai/gpt-oss-120b"
+    assert tts._opts.model == "canopylabs/orpheus-v1-english"
+    assert tts._opts.voice == "autumn"
+

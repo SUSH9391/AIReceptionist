@@ -60,10 +60,10 @@ async def resolve_voice_bearer_async(auth: VoiceAuth | None) -> str | None:
 
 
 def resolve_voice_bearer(auth: VoiceAuth | None) -> str | None:
-    """Resolve the bearer string passed to RealtimeModel(api_key=...).
+    """Resolve the bearer string passed to voice models.
 
     Returning None is intentional only for omitted auth, preserving the
-    livekit-openai plugin's existing OPENAI_API_KEY fallback.
+    plugin's existing API key fallback.
     """
     if auth is None:
         return None

@@ -22,12 +22,12 @@ business:
   timezone: "America/New_York"
 
 voice:
-  voice_id: "marin"              # OpenAI Realtime voice; "marin"/"cedar" are GA Realtime voices
-  model: "gpt-realtime-2.1"      # Current full model; use gpt-realtime-2.1-mini only after workload validation
+  voice_id: "autumn"                       # Groq Orpheus voice: autumn, diana, hannah, austin, daniel, etc.
+  model: "openai/gpt-oss-120b"             # Groq LLM model
+  stt_model: "whisper-large-v3-turbo"      # Groq STT model
+  tts_model: "canopylabs/orpheus-v1-english" # Groq TTS model
   # auth:
-  #   type: "api_key"             # reads OPENAI_API_KEY by default — REQUIRED for GA Realtime
-  #   # NOTE: oauth_codex (ChatGPT/Codex OAuth) no longer authenticates the GA
-  #   # Realtime API as of the 2026-06-03 beta sunset — use a standard sk- API key.
+  #   type: "api_key"                      # reads GROQ_API_KEY by default
   # idle:
   #   silence_hangup_enabled: true
   #   away_seconds: 15

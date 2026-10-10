@@ -24,6 +24,10 @@ from livekit.agents import (
     function_tool, room_io, get_job_context,
 )
 from livekit.plugins import openai, noise_cancellation
+try:
+    from livekit.plugins import groq
+except ImportError:
+    groq = None
 
 from receptionist.booking.availability import find_slots
 from receptionist.booking.models import SlotProposal
@@ -137,6 +141,39 @@ def _apply_realtime_options(realtime_model, voice_config) -> None:
             voice_config.max_response_output_tokens,
             extra={"component": "agent.realtime"},
         )
+
+
+def _build_groq_pipeline(voice_config, api_key: str | None):
+    """Build STT, LLM, and TTS instances for Groq voice pipeline."""
+    if groq is None:
+        raise RuntimeError("livekit-plugins-groq is not installed")
+
+    stt_model = getattr(voice_config, "stt_model", None) or "whisper-large-v3-turbo"
+    llm_model = getattr(voice_config, "model", None) or "openai/gpt-oss-120b"
+    tts_model = getattr(voice_config, "tts_model", None) or "canopylabs/orpheus-v1-english"
+    voice_id = getattr(voice_config, "voice_id", None) or "autumn"
+
+    # If business config still has legacy OpenAI model/voice values, normalize to Groq requirements
+    if llm_model.startswith("gpt-"):
+        llm_model = "openai/gpt-oss-120b"
+    if voice_id in ("marin", "cedar", "alloy", "echo", "fable", "onyx", "nova", "shimmer"):
+        voice_id = "autumn"
+
+    stt_kwargs = {"model": stt_model}
+    llm_kwargs = {"model": llm_model}
+    tts_kwargs = {"model": tts_model, "voice": voice_id}
+
+    effective_api_key = api_key or os.environ.get("GROQ_API_KEY")
+    if effective_api_key:
+        stt_kwargs["api_key"] = effective_api_key
+        llm_kwargs["api_key"] = effective_api_key
+        tts_kwargs["api_key"] = effective_api_key
+
+    stt = groq.STT(**stt_kwargs)
+    llm = groq.LLM(**llm_kwargs)
+    tts = groq.TTS(**tts_kwargs)
+
+    return stt, llm, tts
 
 
 # Substrings in a realtime error message that mean "the model's response was
@@ -2455,13 +2492,12 @@ async def handle_call(ctx: agents.JobContext):
         )
 
     idle_cfg = config.voice.idle
-    realtime_kwargs = _build_realtime_model_kwargs(
-        config.voice, api_key=await resolve_voice_bearer_async(config.voice.auth),
-    )
-    realtime_model = openai.realtime.RealtimeModel(**realtime_kwargs)
-    _apply_realtime_options(realtime_model, config.voice)
+    voice_bearer = await resolve_voice_bearer_async(config.voice.auth)
+    stt, llm, tts = _build_groq_pipeline(config.voice, api_key=voice_bearer)
     session = AgentSession(
-        llm=realtime_model,
+        stt=stt,
+        llm=llm,
+        tts=tts,
         # Issue #11: feed the silence-hangup `away_seconds` into LiveKit's
         # built-in user-state machine. When the caller falls silent for this
         # long, `user_state` flips to "away" and we start the grace timer.

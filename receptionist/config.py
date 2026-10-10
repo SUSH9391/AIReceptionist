@@ -170,17 +170,13 @@ class VoiceConfig(BaseModel):
 
     voice_id: str = "marin"
     model: str = "gpt-realtime-2.1"
+    stt_model: str = "whisper-large-v3-turbo"
+    tts_model: str = "canopylabs/orpheus-v1-english"
     auth: VoiceAuth | None = None
     idle: VoiceIdleConfig = Field(default_factory=VoiceIdleConfig)
-    # Reasoning effort for reasoning-capable Realtime models (e.g.
-    # gpt-realtime-2.1). None leaves the model's default. Lower effort can
-    # reduce latency and output-token usage. Only applied when the installed
-    # livekit-plugins-openai exposes the `reasoning` parameter.
+    # Reasoning effort for reasoning-capable models. None leaves the model default.
     reasoning_effort: str | None = None
     # Hard cap on tokens per model response. None leaves the model default.
-    # A finite cap protects against a runaway response exhausting the
-    # account's per-minute token rate limit (the cause of mid-call dead air
-    # on rate-limited tiers).
     max_response_output_tokens: int | None = None
 
     @field_validator("reasoning_effort")
